@@ -1,0 +1,9 @@
+name = "DateTimeUtils"
+uuid = "57c7b68a-811b-4120-95ca-8767f0744932"
+authors = ["Rafael <rafaelab@users.noreply.github.com>"]
+version = "0.1.0"
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"

@@ -1,4 +1,4 @@
-# ---------------------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------------------------- #
 #
 @doc """
 Extend Unitful's `uconvert` to enable directly counting selected units of time from an object of type `Time`.
@@ -11,78 +11,35 @@ Extend Unitful's `uconvert` to enable directly counting selected units of time f
 """
 uconvert(u::Unitful.Units, t::TimeTypes) = secondsIn(t) * u"s" |> u
 
-# ---------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------------------------- #
 #
 @doc """
+Extend Julia's `Base` function `convert` to handle any type of time.
 """
-function Base.convert(::Type{Time}, time::Unitful.Time) 
-	t = nothing
-
-	try 
-		dt = convert(Nanosecond, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
+function Base.convert(::Type{CompoundPeriod}, time::Unitful.Time; referenceUnit = u"d", truncationUnit = u"ms")
+	unitDict = Dict(
+		u"wk" => Week,
+		u"d" => Day,
+		u"hr" => Hour,
+		u"minute" => Minute,
+		u"s" => Second,
+		u"ms" => Millisecond,
+		u"μs" => Microsecond,
+		u"ns" => Nanosecond
+		)
+	uR = referenceUnit
+	uT = truncationUnit
+	if uR ∉ keys(unitDict) || uT ∉ keys(unitDict)
+		throw(KeyError("Unknown units are being used for time conversion."))
 	end
-
-	try 
-		dt = convert(Microsecond, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
-	end
-
-	try 
-		dt = convert(Millisecond, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
-	end
-
-	try 
-		dt = convert(Second, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
-	end
-
-	try 
-		dt = convert(Minute, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
-	end
-
-	try 
-		dt = convert(Hour, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
-	end
-
-	try 
-		dt = convert(Day, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
-	end
-
-	try 
-		dt = convert(Week, time)
-		t = isnothing(t) ? dt : t + dt
-		return canonicalize(t)
-	catch
-	end
-
-	if isnothing(t) 
-		throw(ErrorException("Problem resolving the time scale required."))
-	end
-
-	return t
+	
+	R = unitDict[uR]
+	T = unitDict[uT]
+	integer = floor(ustrip(time |> uR)) * uR
+	decimal = ((time |> uR) - integer) |> uT
+	return canonicalize(CompoundPeriod(R(ustrip(integer)), T(round(ustrip(decimal)))))
 end
 
 
-
-
-
-# ---------------------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------------------------- #
